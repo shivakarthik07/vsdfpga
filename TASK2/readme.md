@@ -68,8 +68,8 @@ wire gpio_rd_en = gpio_sel && mem_rstrb;
 wire gpio_sel   = isIO     && (mem_wordaddr == 30'h00100008);
 ```
 ### EXPLANATION:
-- GPIO is selected only when CPU accesses 0x00400020.
-- This exactly matches the C macro #define GPIO_ADDR (0x00400000 + 0x20).
+- GPIO is selected only when CPU accesses``` 0x00400020```.
+- This exactly matches the C macro ```#define GPIO_ADDR (0x00400000 + 0x20)```.
 - Write enable depends on mem_wmask; read enable depends on mem_rstrb.
 
 ### 2. GPIO IP Instantiation
