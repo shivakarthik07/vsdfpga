@@ -150,9 +150,14 @@ volatile uint32_t *gpio = (uint32_t *)GPIO_ADDR;
 ### Observed signals:
 - clk, resetn
 - mem_addr, mem_wmask
-- gpio_wr_en, gpio_rd_en
-- gpio_data, gpio_rdata
--
+- wr_en,rd_en
+- gpio_data,rdata,w_data
+- mem_rdata,mem_wdata,mem_wordaddr,gpio_sel
+  
+### <img width="1301" height="390" alt="selecthigh" src="https://github.com/user-attachments/assets/08c8eaad-0eb6-44c5-91f8-531d2bf3a4a3" />
+### <img width="1301" height="390" alt="readbackoutput" src="https://github.com/user-attachments/assets/ebfbd501-ee3b-48bb-b3bf-fd3f42fb69a5" />
+### <img width="1301" height="390" alt="writeoutput" src="https://github.com/user-attachments/assets/c874807e-abf7-4d5b-b752-7fca32bb5fa5" />
+
 ### output flow:
 - The firmware accesses peripherals using memory-mapped I/O with a fixed IO base address ``` 0x00400000 ```.
 - GPIO is mapped at address ``` 0x00400020 (IO_BASE + 0x20) ```, which matches the RTL IO decode region.
