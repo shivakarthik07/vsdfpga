@@ -156,7 +156,8 @@ Firmware accesses peripherals using **full 32-bit memory-mapped addresses**.
 ## Simulation Output Explanation
 
 ### Terminal Output
-<img width="1920" height="982" alt="t3terminalproof" src="https://github.com/user-attachments/assets/12fdb07c-ff90-4cc2-b091-613f44f485c5" />
+<img width="1920" height="982" alt="t3terminaloutput" src="https://github.com/user-attachments/assets/0d4d8c6f-172c-4f3c-837b-b013574bc4bd" />
+
 
 ### Write Behaviour
 <img width="1029" height="447" alt="t3writeoutput" src="https://github.com/user-attachments/assets/90ae5078-ee43-4c86-90c7-9523d8057dc8" />
