@@ -151,7 +151,19 @@ Firmware accesses peripherals using **full 32-bit memory-mapped addresses**.
 
 ---
 
+
+
 ## Simulation Output Explanation
+
+### Terminal Output
+<img width="1920" height="982" alt="t3terminalproof" src="https://github.com/user-attachments/assets/12fdb07c-ff90-4cc2-b091-613f44f485c5" />
+
+### Write Behaviour
+<img width="1029" height="447" alt="t3writeoutput" src="https://github.com/user-attachments/assets/90ae5078-ee43-4c86-90c7-9523d8057dc8" />
+
+### Readback behaviour
+<img width="1160" height="417" alt="t3readback" src="https://github.com/user-attachments/assets/5f4ad627-6b01-4d2a-b176-deabd0802e76" />
+
 - `GPIO_DATA` = last written value (e.g. `0x0A`)
 - `GPIO_DIR`  = configured directions
 - `GPIO_READ` = merged pin state (`0xAA`)
