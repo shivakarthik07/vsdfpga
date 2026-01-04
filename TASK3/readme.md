@@ -180,13 +180,7 @@ gpio_data becomes 0x0000000A
 gpio_dir becomes 0x0000001F 
 gpio_out = gpio_data & gpio_dir
 ```
-### LEDS BEHAVIOR
-#### In the SoC, LEDs are directly driven from GPIO outputs:
-```c
-always @(posedge clk)
-    LEDS <= gpio_out[4:0];
-```
-#### What This Means
+#### LEDS behavior
 - LEDs reflect only output pins
 - Input pins never affect LEDs
 - LEDs show the physical output state
@@ -203,7 +197,6 @@ LEDS = 01010
 ## Readback behaviour
 <img width="1160" height="417" alt="t3readback" src="https://github.com/user-attachments/assets/5f4ad627-6b01-4d2a-b176-deabd0802e76" />
 
-### GPIO READBACK Behavior (GPIO_READ)
 #### Purpose of GPIO_READ
 - GPIO_READ returns the actual pin state, not just the stored data.
 ####
@@ -232,7 +225,7 @@ GPIO_READ       = 10101010 (0xAA)
 ```
 #### Terminal output:
 ```GPIO READ = 000000AA```
-#### simulation completeness
+#### The simulation validates
 - `GPIO_DATA` = last written value (e.g. `0x0A`)
 - `GPIO_DIR`  = configured directions
 - `GPIO_READ` = merged pin state (`0xAA`)
