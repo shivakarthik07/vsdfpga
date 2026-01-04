@@ -155,16 +155,84 @@ Firmware accesses peripherals using **full 32-bit memory-mapped addresses**.
 
 ## Simulation Output Explanation
 
-### Terminal Output
+## Terminal Output
 <img width="1920" height="982" alt="t3terminaloutput" src="https://github.com/user-attachments/assets/0d4d8c6f-172c-4f3c-837b-b013574bc4bd" />
 
-
-### Write Behaviour
+## Write Behaviour
 <img width="1029" height="447" alt="t3writeoutput" src="https://github.com/user-attachments/assets/90ae5078-ee43-4c86-90c7-9523d8057dc8" />
 
-### Readback behaviour
+#### The firmware first configures GPIO direction and then writes output data
+```c
+GPIO_DIR  = 0x0000001F;   // Lower 5 GPIOs as outputs
+GPIO_DATA = 0x0000000A;   // Write output pattern
+```
+#### What Happens in RTL
+#### gpio_wr_en is asserted when:
+-  CPU accesses ```IO space```
+-  Address matches ```GPIO region```
+- ``` mem_wmask ```is non-zero (store instruction)
+#### Based on the decoded register offset:
+-  Offset ```0x00``` → ```gpio_data``` is updated
+-  Offset ```0x04``` → ```gpio_dir``` is updated
+#### Simulation behaviour
+```c
+gpio_data becomes 0x0000000A
+gpio_dir becomes 0x0000001F 
+gpio_out = gpio_data & gpio_dir
+```
+### LEDS BEHAVIOR
+#### In the SoC, LEDs are directly driven from GPIO outputs:
+```c
+always @(posedge clk)
+    LEDS <= gpio_out[4:0];
+```
+#### What This Means
+- LEDs reflect only output pins
+- Input pins never affect LEDs
+- LEDs show the physical output state
+#### Simulation Observation
+```c
+gpio_out[4:0] = 01010
+LEDS = 01010
+```
+#### This confirms
+- GPIO write propagated correctly
+- Output pins are driven as expected
+- LEDs validate write functionality only
+
+## Readback behaviour
 <img width="1160" height="417" alt="t3readback" src="https://github.com/user-attachments/assets/5f4ad627-6b01-4d2a-b176-deabd0802e76" />
 
+### GPIO READBACK Behavior (GPIO_READ)
+#### Purpose of GPIO_READ
+- GPIO_READ returns the actual pin state, not just the stored data.
+####
+- ```GPIO_DATA```   --   Stores last written output value
+- ```GPIO_READ```	  --   Returns real pin state
+
+#### RTL Read Logic
+```c
+rdata <= (gpio_out | (gpio_in & ~gpio_dir));
+```
+#### How This Works
+- Output pins ```gpio_dir``` = 1 → reflect ```gpio_out```
+- Input pins ```gpio_dir``` = 0 → reflect ```gpio_in```
+#### Simulation Values
+```c
+gpio_out = 00001010
+gpio_dir = 00001111
+gpio_in  = 10101010
+```
+#### Caluculation:
+```c
+~gpio_dir       = 11110000
+gpio_in & ~dir  = 10100000
+--------------------------------
+GPIO_READ       = 10101010 (0xAA)
+```
+#### Terminal output:
+```GPIO READ = 000000AA```
+#### simulation completeness
 - `GPIO_DATA` = last written value (e.g. `0x0A`)
 - `GPIO_DIR`  = configured directions
 - `GPIO_READ` = merged pin state (`0xAA`)
