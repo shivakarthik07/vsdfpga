@@ -143,6 +143,9 @@ This allows **hardware‑visible verification** even without UART output.
 <img width="1597" height="191" alt="reload_timer_reloaded" src="https://github.com/user-attachments/assets/ddca9c74-dece-4955-b13b-c2c0a487be0f" />
 **TIMER READBACK**
 <img width="1609" height="217" alt="reload_timer_readback" src="https://github.com/user-attachments/assets/35c47bf4-3b13-4bd1-b818-73b136d13d0d" />
+**TIMEOUT_TOGGLE**
+<img width="1057" height="194" alt="timeout_toggling" src="https://github.com/user-attachments/assets/9e63e4b8-f3d5-4f56-8832-c5a6f56d7581" />
+
 
 ---
 
