@@ -209,16 +209,22 @@ riscv64-unknown-elf-objcopy -O ihex firmware.elf firmware.hex
 ### 2. RTL Synthesis (Yosys)
 
 ```bash
-yosys -p
-read_verilog riscv.v
-read_verilog timer_ip.v
+yosys -p "
+read_verilog riscv.v timer_ip.v
 synth_ice40 -top SOC -json soc.json
+"
 ```
 
 ### 3. Place & Route (nextpnr)
 
 ```bash
-nextpnr-ice40   --hx8k   --package cb132   --pcf VSDSquadronFM.pcf   --json soc.json   --asc soc.asc   --pcf-allow-unconstrained
+nextpnr-ice40 \
+  --hx8k \
+  --package cb132 \
+  --pcf VSDSquadronFM.pcf \
+  --pcf-allow-unconstrained \
+  --json soc.json \
+  --asc soc.asc
 ```
 
 ### 4. Bitstream Generation
