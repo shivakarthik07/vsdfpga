@@ -101,7 +101,6 @@ This allows **hardware‑visible verification** even without UART output.
 - Timer starts with a large LOAD value
 - VALUE decreases over time
 - STATUS[0] becomes `1` once
-- Program prints timeout message and exits
 
 **Result**
 - Confirms correct one‑shot operation
@@ -128,7 +127,6 @@ This allows **hardware‑visible verification** even without UART output.
 **Expected Behavior**
 - STATUS[0] asserts repeatedly
 - Software clears STATUS each time
-- Multiple timeout messages printed
 
 **Result**
 - Confirms reload logic and W1C behavior
