@@ -189,7 +189,9 @@ This allows **hardware‑visible verification** even without UART output.
 - Confirms correct synthesis, timing, and IO mapping
 
 *(A demonstration video is attached separately.)*
-  [led_blink_on_timeout_high](TASK4/images/timer_hardware_validation/ledblink_onfpga_after_timeout_goeshigh.mp4)
+
+[led_blink_on_timeout_high](TASK4/images/timer_hardware_validation/ledblink_onfpga_after_timeout_goeshigh.mp4)
+
 ---
 
 ## Build & Implementation Flow
