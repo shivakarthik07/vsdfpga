@@ -105,6 +105,15 @@ This allows **hardware‑visible verification** even without UART output.
 
 **Result**
 - Confirms correct one‑shot operation
+  
+**Images**
+
+**Timer load**
+<img width="1598" height="375" alt="loadtimer" src="https://github.com/user-attachments/assets/78d8df5d-2b0a-4125-9f55-293c46e6f164" />
+**Timer decrement**
+<img width="1598" height="375" alt="timerfunctioning" src="https://github.com/user-attachments/assets/1214b75b-402c-43f3-98ae-88e49b1c123d" />
+**Timeout High**
+<img width="1317" height="114" alt="timeout_high_timer" src="https://github.com/user-attachments/assets/73b3097b-f7af-4423-b149-ebfbe626e3a7" />
 
 ---
 
@@ -123,6 +132,19 @@ This allows **hardware‑visible verification** even without UART output.
 
 **Result**
 - Confirms reload logic and W1C behavior
+  
+**IMAGES**
+
+**TESTING RELOADING PROPERTY OF ```TIMER_IP```**
+
+**TIMER LOADED**
+<img width="1597" height="191" alt="reload_timer_load" src="https://github.com/user-attachments/assets/f0952aa7-10a9-43aa-8009-a6a3cb5d3d14" />
+**TIMER DECREMENT**
+<img width="1597" height="191" alt="reload_timer_decrement" src="https://github.com/user-attachments/assets/14fa6f59-6fdd-480b-9702-0167ef03f908" />
+**TIMER RELOADED**
+<img width="1597" height="191" alt="reload_timer_reloaded" src="https://github.com/user-attachments/assets/ddca9c74-dece-4955-b13b-c2c0a487be0f" />
+**TIMER READBACK**
+<img width="1609" height="217" alt="reload_timer_readback" src="https://github.com/user-attachments/assets/35c47bf4-3b13-4bd1-b818-73b136d13d0d" />
 
 ---
 
@@ -138,6 +160,17 @@ This allows **hardware‑visible verification** even without UART output.
 
 **Result**
 - Confirms reliable timeout clearing
+
+**IMAGES**
+
+**ONESHOT_LOAD & TIMEOUT_CLEAR_TEST**
+
+**TIMER_LOADED**
+<img width="1162" height="183" alt="timer_clear_png" src="https://github.com/user-attachments/assets/76d8a85d-ffe3-47fb-9c45-dcd4c1304fc8" />
+**TIMER_DECREMENT & TIMEOUT_HIGH**
+<img width="1612" height="198" alt="timer_cleaar_decrementing" src="https://github.com/user-attachments/assets/067047e9-a845-4ad1-a56c-c9075d1f5467" />
+**TIMEOUT_RESET**
+<img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
 
 ---
 
