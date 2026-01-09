@@ -1,0 +1,4 @@
+# Minimal test PCF for HX8K-CB132
+
+set_io LEDS[0] A5
+
