@@ -205,12 +205,11 @@ riscv64-unknown-elf-objcopy -O ihex firmware.elf firmware.hex
 ### 2. RTL Synthesis (Yosys)
 
 ```bash
-yosys -p "
+yosys -p
 read_verilog riscv.v
 read_verilog timer_ip.v
 read_verilog ice40_stubs.v
 synth_ice40 -top SOC -json soc.json
-"
 ```
 
 ### 3. Place & Route (nextpnr)
