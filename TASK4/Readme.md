@@ -190,6 +190,7 @@ This allows **hardware‑visible verification** even without UART output.
 
 *(A demonstration video is attached separately.)*
 
+**led blinks after some time when timeout goes high**
 [LED_BLINK](https://drive.google.com/file/d/1M_fXuN6hM9jtkfFzpWRU5EPvglLoG621/view?usp=drive_link)
 
 
