@@ -106,13 +106,13 @@ This allows **hardware‑visible verification** even without UART output.
 **Result**
 - Confirms correct one‑shot operation
   
-**Images**
+**IMAGES**
 
-**Timer load**
+**TIMER_LOAD**
 <img width="1598" height="375" alt="loadtimer" src="https://github.com/user-attachments/assets/78d8df5d-2b0a-4125-9f55-293c46e6f164" />
-**Timer decrement**
+**TIMER_DECREMENT**
 <img width="1598" height="375" alt="timerfunctioning" src="https://github.com/user-attachments/assets/1214b75b-402c-43f3-98ae-88e49b1c123d" />
-**Timeout High**
+**TIMEOUT_HIGH**
 <img width="1317" height="114" alt="timeout_high_timer" src="https://github.com/user-attachments/assets/73b3097b-f7af-4423-b149-ebfbe626e3a7" />
 
 ---
