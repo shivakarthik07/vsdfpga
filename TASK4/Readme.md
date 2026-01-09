@@ -256,6 +256,3 @@ This project demonstrates:
 The timer is reusable, scalable, and suitable for interrupts or RTOS tick generation in future extensions.
 
 ---
-
-**Author**: Karthiik  
-**Target FPGA**: iCE40 HX8K (VSDSquadron board)
