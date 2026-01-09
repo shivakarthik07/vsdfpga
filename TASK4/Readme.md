@@ -190,7 +190,8 @@ This allows **hardware‑visible verification** even without UART output.
 
 *(A demonstration video is attached separately.)*
 
-[led_blink_on_timeout_high](https://drive.google.com/file/d/1uNeh9IDu9j_xW9bTrQsGHZQBhJCPBgwW/view?usp=drive_link)
+[LED_BLINK](https://drive.google.com/file/d/1M_fXuN6hM9jtkfFzpWRU5EPvglLoG621/view?usp=drive_link)
+
 
 ---
 
