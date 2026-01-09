@@ -1,0 +1,228 @@
+# RISC-V SoC Timer IP – Design, Integration, and Testing
+
+## Overview
+
+This project extends a minimal **RV32I RISC-V SoC** with a **memory-mapped timer peripheral (`timer_ip`)**.  
+The timer is integrated into the SoC address space, accessed from C firmware, and validated through simulation and FPGA deployment.
+
+The main goals were:
+- Implement a **clean, synthesizable timer IP**
+- Support **one-shot**, **periodic (reload)**, and **prescaled** operation
+- Expose a **hardware timeout signal** for direct logic (LED toggle)
+- Verify behavior using **bare‑metal C tests**
+
+---
+
+## Timer IP  – Design Explanation
+
+### Register Map
+
+| Offset | Name   | Access | Description |
+|------:|--------|--------|-------------|
+| 0x00  | CTRL   | R/W    | Control register |
+| 0x04  | LOAD   | R/W    | Reload / start value |
+| 0x08  | VALUE  | R      | Current countdown value |
+| 0x0C  | STATUS | R/W1C  | Timeout flag (bit 0) |
+
+### CTRL Register Fields
+
+| Bit(s) | Name | Description |
+|------:|------|-------------|
+| 0 | EN | Enable timer |
+| 1 | MODE | 0 = one-shot, 1 = periodic |
+| 2 | PRESC_EN | Enable prescaler |
+| 15:8 | PRESC_DIV | Prescaler divider value |
+
+### Key Design Choices
+
+#### 1. **Write‑1‑to‑Clear (W1C) STATUS**
+- Timeout flag is cleared only when software writes `1` to STATUS[0]
+- Prevents accidental clears from normal reads
+
+#### 2. **Preload on Disable**
+- When `EN = 0`, the timer automatically loads `LOAD` into `VALUE`
+- Guarantees deterministic startup behavior
+
+#### 3. **Prescaler**
+- Optional prescaler allows slow timer ticks without changing system clock
+- Divider stored in CTRL[15:8]
+
+#### 4. **One‑Shot vs Periodic**
+- **One‑shot**: timer stops at zero after timeout
+- **Periodic**: timer reloads automatically from `LOAD`
+
+#### 5. **Hardware Timeout Output**
+- `timeout_o` is asserted when VALUE transitions from `1 → 0`
+- Used directly in SoC logic (LED toggle)
+
+---
+
+## SoC Integration 
+
+### Address Decode
+
+The timer is mapped at:
+
+```
+TIMER_BASE = 0x0040_0040
+```
+
+Decoded in hardware using:
+- `mem_addr[22]` → IO page
+- `mem_wordaddr[1:0]` → register select
+
+### Connections
+
+- `rdata` → CPU load path
+- `timeout_o` → hardware logic
+- Timer shares system clock and reset
+
+### LED Debug Logic
+
+A rising edge detector toggles LED[0] on every timeout event:
+
+```verilog
+if (timer_timeout && !timeout_d)
+    LEDS[0] <= ~LEDS[0];
+```
+
+This allows **hardware‑visible verification** even without UART output.
+
+---
+
+## Firmware Tests – Behavior Explained
+
+### 1. `timer_test.c` – One‑Shot Timeout
+
+**Purpose**
+- Verify basic countdown and timeout flag
+
+**Expected Behavior**
+- Timer starts with a large LOAD value
+- VALUE decreases over time
+- STATUS[0] becomes `1` once
+- Program prints timeout message and exits
+
+**Result**
+- Confirms correct one‑shot operation
+
+---
+
+### 2. `timer_periodic.c` – Reload (Periodic) Mode
+
+**Purpose**
+- Verify automatic reload after timeout
+
+**Configuration**
+- MODE = 1 (periodic)
+
+**Expected Behavior**
+- STATUS[0] asserts repeatedly
+- Software clears STATUS each time
+- Multiple timeout messages printed
+
+**Result**
+- Confirms reload logic and W1C behavior
+
+---
+
+### 3. `timer_clear_test.c` – Timeout Clear Validation
+
+**Purpose**
+- Verify STATUS W1C semantics
+
+**Expected Behavior**
+1. Timer expires → STATUS = 1
+2. Software writes `1` to STATUS
+3. STATUS clears back to `0`
+
+**Result**
+- Confirms reliable timeout clearing
+
+---
+
+### 4. `timer_test2.c` – Hardware Validation (FPGA)
+
+**Purpose**
+- Validate timer on real FPGA hardware
+
+**Behavior**
+- Timer runs continuously
+- `timeout_o` toggles LED[0] on each expiration
+- No UART required
+
+**Result**
+- LED visibly blinks
+- Confirms correct synthesis, timing, and IO mapping
+
+*(A demonstration video is attached separately.)*
+
+---
+
+## Build & Implementation Flow
+
+### 1. Firmware Build
+
+```bash
+riscv64-unknown-elf-gcc -Os   -march=rv32i -mabi=ilp32   -ffreestanding -nostdlib   start.S timer_test2.c   -Wl,-T,link.ld   -o firmware.elf
+
+riscv64-unknown-elf-objcopy -O ihex firmware.elf firmware.hex
+```
+
+### 2. RTL Synthesis (Yosys)
+
+```bash
+yosys -p "
+read_verilog riscv.v
+read_verilog timer_ip.v
+read_verilog ice40_stubs.v
+synth_ice40 -top SOC -json soc.json
+"
+```
+
+### 3. Place & Route (nextpnr)
+
+```bash
+nextpnr-ice40   --hx8k   --package cb132   --pcf VSDSquadronFM.pcf   --json soc.json   --asc soc.asc   --pcf-allow-unconstrained
+```
+
+### 4. Bitstream Generation
+
+```bash
+icepack soc.asc soc.bin
+```
+
+### 5. FPGA Programming
+
+```bash
+iceprog soc.bin
+```
+
+---
+
+## Issues Faced & Fixes
+
+| Issue | Fix |
+|-----|-----|
+| Module redefinition | Avoid reading included files twice in Yosys |
+| HFOSC placement failure | Disabled HFOSC, used external clock |
+| Unconstrained IO errors | Added PCF entries / allowed unconstrained |
+| Timer double decrement | Reworked VALUE update logic |
+| Timeout glitching | Added edge detection in SoC |
+
+---
+
+## Conclusion
+
+This project demonstrates:
+- A **cleanly designed hardware timer**
+- Correct **memory‑mapped peripheral integration**
+- Robust **bare‑metal software testing**
+- Successful **simulation and FPGA validation**
+
+The timer is reusable, scalable, and suitable for interrupts or RTOS tick generation in future extensions.
+
+---
+
+**Author**: Karthiik  
+**Target FPGA**: iCE40 HX8K (VSDSquadron board)
