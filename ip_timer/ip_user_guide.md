@@ -60,7 +60,7 @@
 ---
 ## Feature Summary
 
-##  Supported Modes
+## Supported Modes:
 
 **Timeout Signal Behavior:**  
 The `timeout_o` signal is **level-asserted**, remaining high once the timer reaches zero, and is cleared explicitly by software via a write-one-to-clear (W1C) operation to the STATUS register.
@@ -93,17 +93,17 @@ Both one-shot and periodic modes may optionally operate with a programmable pres
 The Timer IP uses explicitly defined bit widths to balance flexibility, synthesis efficiency, and portability.
 
 ### Counter Width
-- The main counter (`VALUE`) is 32 bits wide.
+- The main counter (`VALUE`) is `32 bits` wide.
 - This supports long-duration timing intervals even at relatively high clock frequencies.
 - The width is suitable for both FPGA and ASIC implementations without modification.
 
 ### Prescaler Width
-- The prescaler divider is 8 bits wide.
+- The prescaler divider is `8 bits` wide.
 - This allows clock division factors from 1 to 256.
 - The prescaler counter itself is internally sized to ensure correct rollover behavior.
 
 ### Control and Status
-- Control and status registers are 32 bits wide.
+- Control and status registers are `32 bits` wide.
 - Only defined bits are used; unused bits are reserved and read as zero.
 - This ensures forward compatibility and ease of software integration.
 
