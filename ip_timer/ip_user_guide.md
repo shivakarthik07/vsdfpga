@@ -58,7 +58,7 @@
    Provides a reusable, standardized timing primitive across multiple designs and products.
 
 ---
-## Feature Summary
+## FEATURE SUMMARY
 
 ## Supported Modes:
 
