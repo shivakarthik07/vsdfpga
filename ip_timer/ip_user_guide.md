@@ -1,5 +1,7 @@
 # Hardware Timer IP 
 
+- In commercial SoC and FPGA designs, a hardware timer is a foundational infrastructure IP , it is essential for deterministic behavior, functional safety, power management, and long-term maintainability of complex systems.
+  
 ##  Purposes 
 
 - **Deterministic Time Reference**  
@@ -159,8 +161,5 @@ While the Timer IP is intentionally general-purpose, certain limitations should 
 The Timer IP provides a compact, deterministic, and configurable hardware timing block suitable for a wide range of embedded and SoC applications.  
 Its design emphasizes clarity, predictability, and ease of reuse, aligning with industry best practices for reusable hardware IP.
 
-## Conclusion
 
-In commercial SoC and FPGA designs, a hardware timer is a foundational infrastructure IP.  
-It is essential for deterministic behavior, functional safety, power management, and long-term maintainability of complex systems.
 
