@@ -155,6 +155,8 @@ While the Timer IP is intentionally general-purpose, certain limitations should 
 - The IP does not autonomously sequence between different timing profiles.
 
 ---
+## BLOCK DIAGRAM
+<img width="1236" height="2928" alt="image" src="https://github.com/user-attachments/assets/f020b3f0-2f65-457e-a70f-339234eda4cc" />
 
 ## Summary
 
