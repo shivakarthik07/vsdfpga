@@ -38,19 +38,16 @@ This test demonstrates **one‑shot mode**:
 
 ### Code Used
 
+<details>
+<summary> one shot test (click to expand)</summary>
+
 ```c
-TIMER_CTRL = 0x0;        // stop
-TIMER_LOAD = 100000;    // large value
-TIMER_CTRL = 0x1;       // EN=1 (one-shot)
 
-v = TIMER_VALUE;
-print_string("TIMER VALUE = ");
-print_hex(v);
-print_string("\n");
 
-while ((TIMER_STAT & 0x1) == 0);
-print_string("TIMER TIMEOUT\n");
 ```
+
+</details>
+
 
 ---
 
