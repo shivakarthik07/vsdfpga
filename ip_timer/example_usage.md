@@ -179,6 +179,16 @@ int main(void)
 * `STATUS` bit sets periodically
 * Software clears `STATUS` using W1C
 
+**TIMER LOADED**
+<img width="1597" height="191" alt="reload_timer_load" src="https://github.com/user-attachments/assets/f0952aa7-10a9-43aa-8009-a6a3cb5d3d14" />
+**TIMER DECREMENT**
+<img width="1597" height="191" alt="reload_timer_decrement" src="https://github.com/user-attachments/assets/14fa6f59-6fdd-480b-9702-0167ef03f908" />
+**TIMER RELOADED**
+<img width="1597" height="191" alt="reload_timer_reloaded" src="https://github.com/user-attachments/assets/ddca9c74-dece-4955-b13b-c2c0a487be0f" />
+**TIMER READBACK**
+<img width="1609" height="217" alt="reload_timer_readback" src="https://github.com/user-attachments/assets/35c47bf4-3b13-4bd1-b818-73b136d13d0d" />
+**TIMEOUT_TOGGLE**
+<img width="1057" height="194" alt="timeout_toggling" src="https://github.com/user-attachments/assets/9e63e4b8-f3d5-4f56-8832-c5a6f56d7581" />
 
 **Key confirmation**
 The timer reloads automatically after every timeout.
