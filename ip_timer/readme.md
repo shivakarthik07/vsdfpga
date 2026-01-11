@@ -77,3 +77,36 @@ While the Timer IP is intentionally general-purpose, certain limitations should 
 ## BLOCK DIAGRAM
 <img width="1236" height="2928" alt="image" src="https://github.com/user-attachments/assets/f020b3f0-2f65-457e-a70f-339234eda4cc" />
 
+# Register Map
+
+---
+
+## Register Summary
+
+| Offset | Register | Access | Description |
+|------:|----------|:------:|-------------|
+| 0x00 | CTRL   | R/W | Control register (enable, mode, prescaler control) |
+| 0x04 | LOAD   | R/W | Load value (initial / reload count) |
+| 0x08 | VALUE  | R   | Current counter value |
+| 0x0C | STATUS | R/W1C | Timeout status (write-1-to-clear) |
+
+---
+
+## CTRL Register (Offset 0x00)
+
+**Reset Value:** `0x0000_0000`  
+**Access:** Read / Write
+
+| Bit(s) | Name | Description |
+|------:|------|-------------|
+| [0] | EN | Timer enable. `1` = timer runs, `0` = timer stopped and preloaded |
+| [1] | MODE | Operating mode: `0` = one-shot, `1` = periodic |
+| [2] | PRESC_EN | Prescaler enable. `1` = prescaler active, `0` = bypass |
+| [15:8] | PRESC_DIV | Prescaler divider value |
+| [31:16] | RSVD | Reserved, read as 0 |
+
+**Behavior:**
+- When `EN=0`, the counter is preloaded with `LOAD`.
+- When `EN=1`, the timer counts based on the prescaler configuration.
+- MODE controls reload behavior after timeout.
+
