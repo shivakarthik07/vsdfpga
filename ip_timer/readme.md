@@ -45,3 +45,20 @@
 -   Provides a reusable, standardized timing primitive across multiple designs and products.
 
 ---
+## FEATURE SUMMARY
+
+## Supported Modes:
+
+The Timer IP supports multiple operating modes to accommodate a wide range of timing requirements in embedded and SoC designs.
+
+### One-Shot Mode
+- In one-shot mode, the timer counts down from a programmed load value to zero and asserts a timeout event once. After the timeout event:
+
+### Periodic (Auto-Reload) Mode
+- In periodic mode, the timer automatically reloads the programmed load value upon reaching zero:
+
+### Prescaled Operation
+- Both one-shot and periodic modes may optionally operate with a programmable prescaler:
+
+---
+
