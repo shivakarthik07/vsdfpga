@@ -12,7 +12,7 @@ This guide assumes **no prior SoC integration experience**.
 
 ---
 
-## 1. Required Files (Minimal & Correct)
+## 1. Required Files 
 
 Only the following files are required.
 
@@ -49,14 +49,13 @@ That means:
 are **already inside `riscv.v`**.
 
 So:
-✅ We **do not** separately compile `processor.v`, `memory.v`, etc.  
-✅ We only *extend* `riscv.v` by **adding the timer wires, decode, and instantiation**
+We only *extend* `riscv.v` by **adding the timer wires, decode, and instantiation**
 
 This avoids mismatch bugs and simplifies synthesis.
 
 ---
 
-## 3. Timer Addressing (Foundation Concept)
+## 3. Timer Addressing 
 
 ### Chosen Base Address
 ```
