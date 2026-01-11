@@ -1,7 +1,6 @@
 # Timer IP – Register Map
 
-This section describes the memory-mapped register interface of the **Timer IP**.
-All registers are 32-bit wide and aligned on 32-bit boundaries.
+### This section describes the memory-mapped register interface of the **Timer IP**,all registers are 32-bit wide and aligned on 32-bit boundaries.
 
 ---
 
