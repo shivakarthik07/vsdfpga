@@ -286,3 +286,5 @@ assign timer_sel =
 - When `EN=1`, the timer counts based on the prescaler configuration.
 - MODE controls reload behavior after timeout.
 
+## how to use ip
+
