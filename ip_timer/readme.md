@@ -352,3 +352,18 @@ icepack soc.asc soc.bin
 iceprog soc.bin
 ```
 
+### Board-Level Signal Mapping
+
+| Timer IP Signal | SoC Signal | FPGA Pin | Board Connection | Purpose |
+|---------------|-----------|---------|-----------------|---------|
+| timeout_o | LEDS[0] | A5 | On-board LED0 | Visual timeout indication |
+
+
+---
+
+### pins
+
+```pcf
+set_io LEDS[0] A5
+```
+
