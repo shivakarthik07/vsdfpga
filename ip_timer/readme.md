@@ -286,5 +286,69 @@ assign timer_sel =
 - When `EN=1`, the timer counts based on the prescaler configuration.
 - MODE controls reload behavior after timeout.
 
-## how to use ip
+## HOW TO USE THE IP
+
+- create a firmware for test
+
+---
+
+###  Use this commands 
+
+---
+
+### Firmware Build (ELF + HEX)
+```bash
+riscv64-unknown-elf-gcc -Os   -march=rv32i -mabi=ilp32   -ffreestanding -nostdlib   start.S timer_test2.c   -Wl,-T,link.ld   -o firmware.elf
+```
+```bash
+riscv64-unknown-elf-objcopy -O ihex firmware.elf firmware.hex
+```
+### Simulation with Icarus Verilog (BENCH mode)
+
+```bash
+iverilog -g2012 -DBENCH   -o sim.vvp   riscv.v timer_ip.v
+```
+
+###  Run Simulation
+
+```bash
+vvp sim.vvp
+```
+
+###  View Waveforms
+
+```bash
+gtkwave soc.vcd
+```
+###  Simulation with Yosys 
+
+```bash
+yosys -p "
+read_verilog riscv.v timer_ip.v
+prep -top SOC
+stat
+"
+```
+### FPGA Synthesis & Bitstream 
+
+```bash
+yosys -p "
+read_verilog riscv.v timer_ip.v
+synth_ice40 -top SOC -json soc.json
+"
+```
+
+```bash
+nextpnr-ice40   --hx8k   --package cb132   --pcf VSDSquadronFM.pcf   --pcf-allow-unconstrained   --json soc.json   --asc soc.asc
+```
+
+```bash
+icepack soc.asc soc.bin
+```
+
+### Program FPGA
+
+```bash
+iceprog soc.bin
+```
 
