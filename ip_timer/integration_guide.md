@@ -1,620 +1,458 @@
-# Complete Integration Guide — Timer IP into VSDSquadron SoC
-**Purpose:** Detailed, step-by-step guide for a beginner to integrate `timer_ip.v` into `soc.v`. Includes full code blocks, all wire declarations, where to instantiate, why each signal exists, build & simulation commands, expected outputs, and common errors / fixes. Downloadable file.
+#  Integration Guide  
+## Timer IP Integration using **riscv.v** (VSDSquadron FPGA)
+
+This document is a **clean, cumulative, integration guide** that matches **exactly how you are building and simulating**:
+
+- **Single RTL file**: `riscv.v` (contains Processor + Memory + SoC glue)
+- **Peripheral RTL**: `timer_ip.v`
+- **Exact toolchain & commands you used**
+- **Why each step exists**, not just what to type
+
+This guide assumes **no prior SoC integration experience**.
 
 ---
 
-## Table of Contents
-1. Required files
-2. Quick overview (what and why)
-3. Full modified `soc.v` (complete listing)
-4. Where and why each wire/statement is added (line-by-line explanation)
-5. Timer instantiation: exact place and reasoning
-6. IO readback mux and mem_rdata logic (why it's required)
-7. LED toggling logic (how it verifies timer)
-8. `timer_ip.v` summary (quick reference)
-9. `link.ld` (full file) and why it matters
-10. `constraints.pcf` (PCF) and pin mapping
-11. Example software (`main.c`) — full example
-12. Build, simulate, synthesize & program commands (step-by-step)
-13. Common errors and fixes
-14. Appendix: Makefile & yosys script snippets
+## 1. Required Files (Minimal & Correct)
+
+Only the following files are required.
+
+### RTL
+- `riscv.v`  
+  → Contains:
+  - RISC‑V core
+  - Memory
+  - SoC interconnect
+  - IO decode logic
+- `timer_ip.v`  
+  → Timer peripheral IP
+
+### Software
+- `start.S` – reset vector / entry code  
+- `timer_test2.c` – test application  
+- `link.ld` – linker script  
+
+### FPGA
+- `VSDSquadronFM.pcf` – pin constraints
 
 ---
 
-## 1. Required files
+## 2. Why We Use a Single `riscv.v`
 
-Place these files in your project directory:
+VSDSquadron uses a **monolithic SoC RTL style**.
 
-- `soc.v` — Top-level SoC (modified; full file included below)
-- `timer_ip.v` — Timer IP (you already have this)
-- `processor.v` — RISC-V core
-- `memory.v` — On-chip RAM
-- `clockworks.v` — Clock/reset helper
-- `corescore_emitter_uart.v` — UART module used by SoC
-- `link.ld` — Linker script (provided below)
-- `constraints.pcf` or `top.pcf` — Pin assignments
-- `main.c` — Example firmware
-- `Makefile` (optional) — build helper (snippet included)
-- Simulation testbench files (optional) — for iverilog or Verilator
+That means:
+- CPU
+- RAM
+- IO decoding
+- Top‑level ports  
 
----
+are **already inside `riscv.v`**.
 
-## 2. Quick overview (what and why)
+So:
+✅ We **do not** separately compile `processor.v`, `memory.v`, etc.  
+✅ We only *extend* `riscv.v` by **adding the timer wires, decode, and instantiation**
 
-- The CPU accesses peripherals using **memory-mapped IO**. The timer is exposed via a fixed base address.
-- `soc.v` must:
-  - Decode CPU addresses and select timer when appropriate.
-  - Present `wr_en` and `rd_en` signals to the timer.
-  - Provide `wdata` and read back `rdata` to the CPU on reads.
-  - Optionally use `timeout_o` as a direct hardware signal (e.g., toggle LED).
-- The `link.ld` places program and data into on-chip RAM so the CPU can execute code.
+This avoids mismatch bugs and simplifies synthesis.
 
 ---
 
-## 3. Full modified `soc.v` (complete listing)
+## 3. Timer Addressing (Foundation Concept)
 
-> This is a self-contained `SOC` module adapted from your earlier file with *all* wire declarations, address decoding, timer instantiation, and LED logic included. Use this as your top-level SoC.
+### Chosen Base Address
+```
+TIMER_BASE = 0x0040_0040
+```
+
+### Why this address?
+- Bit 22 = `1` → IO space
+- Does not overlap UART / GPIO
+- Word aligned
+
+### Word Address Conversion
+```
+0x00400040 >> 2 = 0x00100010
+```
+
+Timer occupies **4 words**:
+
+| Address | Register |
+|------|------|
+| +0x00 | CTRL |
+| +0x04 | LOAD |
+| +0x08 | VALUE |
+| +0x0C | STATUS |
+
+---
+
+## 4. What Must Be Added Inside `riscv.v`
+
+> All changes happen **inside the SOC module** in `riscv.v`
+
+---
+
+### 4.1 Wire Declarations (WHY: connect timer to SoC bus)
 
 ```verilog
-// soc.v - Top-level SoC including timer integration
-`timescale 1ns / 1ps
+wire        timer_sel;
+wire        timer_wr_en;
+wire        timer_rd_en;
+wire [1:0]  timer_addr;
 
-module SOC (
-    input        CLK,    // board/system clock
-    input        RESET,  // board reset (active high push button)
-    output reg [4:0] LEDS, // LED outputs
-    input        RXD,    // UART RX (unused in this example)
-    output       TXD     // UART TX
-);
-
-`ifdef BENCH
-reg clk;
-wire resetn;
-`else
-wire clk;
-wire resetn;
-`endif
-
-// -----------------------------
-// CPU <-> Memory interface (word-addressed externally)
-// -----------------------------
-wire [31:0] mem_addr;   // byte address from CPU
-wire [31:0] mem_rdata;  // data returned to CPU
-wire        mem_rstrb;  // read strobe (CPU read)
-wire [31:0] mem_wdata;  // CPU write data
-wire [3:0]  mem_wmask;  // byte write mask (per byte lanes)
-
-// -----------------------------
-// CPU instantiation
-// -----------------------------
-Processor CPU(
-   .clk(clk),
-   .resetn(resetn),
-   .mem_addr(mem_addr),
-   .mem_rdata(mem_rdata),
-   .mem_rstrb(mem_rstrb),
-   .mem_wdata(mem_wdata),
-   .mem_wmask(mem_wmask)
-);
-
-// -----------------------------
-// Memory mapping helpers
-// mem_wordaddr is the CPU address >> 2 (word address)
-// isIO indicates access to IO region (mem_addr[22] == 1)
-// isRAM indicates RAM access
-// -----------------------------
-wire [29:0] mem_wordaddr = mem_addr[31:2];
-wire isIO  = mem_addr[22];
-wire isRAM = !isIO;
-wire mem_wstrb = |mem_wmask; // any byte lane asserted => write
-
-// -----------------------------
-// On-chip RAM instantiation
-// -----------------------------
-wire [31:0] RAM_rdata;
-
-Memory RAM(
-    .clk(clk),
-    .mem_addr(mem_addr),
-    .mem_rdata(RAM_rdata),
-    .mem_rstrb(isRAM & mem_rstrb),
-    .mem_wdata(mem_wdata),
-    .mem_wmask({4{isRAM}} & mem_wmask)
-);
-
-// -----------------------------
-// UART definitions (existing)
-// -----------------------------
-localparam IO_LEDS_bit      = 0;  // Not used for timer, kept for completeness
-localparam IO_UART_DAT_bit  = 1;  // Write data to UART
-localparam IO_UART_CNTL_bit = 2;  // Read-only UART status bit
-
-wire uart_valid = isIO & mem_wstrb & mem_wordaddr[IO_UART_DAT_bit];
-wire uart_ready;
-
-corescore_emitter_uart #(
-    .clk_freq_hz(12*1000000),
-    .baud_rate(9600)
-) UART (
-    .i_clk(clk),
-    .i_rst(!resetn),
-    .i_data(mem_wdata[7:0]),
-    .i_valid(uart_valid),
-    .o_ready(uart_ready),
-    .o_uart_tx(TXD)
-);
-
-// -----------------------------
-// TIMER definitions and address decode
-// Base address chosen: 0x00400040 (word addr = 0x00100010)
-// Registers cover 4 word addresses: 0x00100010..0x00100013
-// -----------------------------
-localparam TIMER_BASE_WADDR = 30'h00100010; // 0x00400040 >> 2
-
-// Timer select: true when mem access is IO and within the timer window
-wire timer_sel = isIO &&
-                 (mem_wordaddr >= TIMER_BASE_WADDR) &&
-                 (mem_wordaddr <= (TIMER_BASE_WADDR + 3));
-
-// Timer read / write strobes
-wire timer_wr_en = timer_sel && mem_wstrb;  // write when any byte lane asserted
-wire timer_rd_en = timer_sel && mem_rstrb;  // read when CPU read strobe
-
-// Register address inside timer (2 LSBs of word address)
-wire [1:0] timer_addr = timer_sel ? mem_wordaddr[1:0] : 2'b00;
-
-// Timer wires for instantiation
 wire [31:0] timer_rdata;
 wire        timer_timeout;
-
-// -----------------------------
-// Timer instantiation
-// -----------------------------
-timer_ip TIMER (
-    .clk      (clk),
-    .resetn   (resetn),
-    .sel      (timer_sel),
-    .wr_en    (timer_wr_en),
-    .rd_en    (timer_rd_en),
-    .addr     (timer_addr),
-    .wdata    (mem_wdata),
-    .rdata    (timer_rdata),
-    .timeout_o(timer_timeout)
-);
-
-// -----------------------------
-// IO read data multiplexer
-// Combine all IO reads here. If an IO peripheral is selected, its data must appear on mem_rdata.
-// The CPU reads mem_rdata after mem_rstrb = 1 for IO accesses.
-// -----------------------------
-wire [31:0] IO_rdata =
-    timer_sel ? timer_rdata :
-    mem_wordaddr[IO_UART_CNTL_bit] ? {22'b0, !uart_ready, 9'b0} :
-    32'b0;
-
-assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
-
-// -----------------------------
-// Optional: Use timer_timeout to toggle an LED (hardware-demonstration)
-// Toggling happens on rising edge of timeout.
-// -----------------------------
-reg timeout_d;
-
-always @(posedge clk) begin
-    if (!resetn) begin
-        LEDS <= 5'b00000;
-        timeout_d <= 1'b0;
-    end else begin
-        timeout_d <= timer_timeout;
-        if (timer_timeout && !timeout_d) begin
-            LEDS[0] <= ~LEDS[0];
-        end
-    end
-end
-
-// -----------------------------
-// Clock and reset glue (Clockworks)
-`ifndef BENCH
-Clockworks CW(
-    .CLK(CLK),
-    .RESET(RESET),
-    .clk(clk),
-    .resetn(resetn)
-);
-`endif
-
-// -----------------------------
-// Testbench support and dump (if BENCH defined)
-`ifdef BENCH
-initial begin
-    $dumpfile("soc.vcd");
-    $dumpvars(0, SOC);
-end
-`endif
-
-`ifdef BENCH
-// Reset generation and clock for testbench
-reg resetn_reg;
-assign resetn = resetn_reg;
-initial clk = 0;
-always #5 clk = ~clk;
-initial begin
-    resetn_reg = 0;
-    #20;
-    resetn_reg = 1;
-end
-`endif
-
-endmodule
 ```
+
+**Why each exists**
+
+| Wire | Purpose |
+|----|----|
+| `timer_sel` | Select timer for its address range |
+| `timer_wr_en` | CPU write → timer |
+| `timer_rd_en` | CPU read ← timer |
+| `timer_addr` | Select CTRL/LOAD/VALUE/STATUS |
+| `timer_rdata` | Data returned to CPU |
+| `timer_timeout` | Hardware timeout signal |
 
 ---
 
-## 4. Where and why each wire/statement is added (detailed explanation)
+### 4.2 Address Decode Logic (MOST IMPORTANT)
 
-Below we go line-by-line for the **critical additions** (the timer-related parts). Read these slowly — the "why" is as important as the "what".
-
-### a) `mem_wordaddr`, `isIO`, `isRAM`, `mem_wstrb`
-```verilog
-wire [29:0] mem_wordaddr = mem_addr[31:2];
-wire isIO  = mem_addr[22];
-wire isRAM = !isIO;
-wire mem_wstrb = |mem_wmask;
-```
-**Why:**  
-- `mem_wordaddr` converts CPU byte address into a word index (the peripheral uses the word index to address registers).  
-- `isIO` is the SoC convention — bit 22 high means this is an IO access (not RAM).  
-- `mem_wstrb` is true when any byte-lane of `mem_wmask` is enabled (a write).
-
-### b) Timer base and select
 ```verilog
 localparam TIMER_BASE_WADDR = 30'h00100010;
-wire timer_sel = isIO &&
-                 (mem_wordaddr >= TIMER_BASE_WADDR) &&
-                 (mem_wordaddr <= (TIMER_BASE_WADDR + 3));
-```
-**Why:**  
-This pins a contiguous 4-word window to the timer registers. `timer_sel` must only be true for addresses belonging to the timer.
 
-### c) Read/write enables & addr decode
+assign timer_sel =
+    isIO &&
+    (mem_wordaddr >= TIMER_BASE_WADDR) &&
+    (mem_wordaddr <= TIMER_BASE_WADDR + 3);
+```
+
+**Why**
+- CPU has *one* address bus
+- Every peripheral must self‑select
+- Prevents accidental register corruption
+
+---
+
+### 4.3 Read / Write Enables
+
 ```verilog
-wire timer_wr_en = timer_sel && mem_wstrb;
-wire timer_rd_en = timer_sel && mem_rstrb;
-wire [1:0] timer_addr = timer_sel ? mem_wordaddr[1:0] : 2'b00;
+assign timer_wr_en = timer_sel && (|mem_wmask);
+assign timer_rd_en = timer_sel && mem_rstrb;
 ```
-**Why:**  
-- Distinguish read/write cycles to send to the timer.  
-- Extract low 2 bits of word address to pick CTRL/LOAD/VALUE/STATUS inside the timer.
 
-### d) Timer instantiation
+**Why**
+- `mem_wmask` indicates CPU write
+- `mem_rstrb` indicates CPU read
+- Timer must react only when selected
+
+---
+
+### 4.4 Internal Register Address
+
+```verilog
+assign timer_addr = mem_wordaddr[1:0];
+```
+
+**Why**
+- `addr = 00` → CTRL
+- `addr = 01` → LOAD
+- `addr = 10` → VALUE
+- `addr = 11` → STATUS
+
+---
+
+### 4.5 Timer Instantiation (Where to Place)
+
+> Place **after IO decode**, **before mem_rdata mux**
+
 ```verilog
 timer_ip TIMER (
     .clk      (clk),
     .resetn   (resetn),
+
     .sel      (timer_sel),
     .wr_en    (timer_wr_en),
     .rd_en    (timer_rd_en),
     .addr     (timer_addr),
     .wdata    (mem_wdata),
     .rdata    (timer_rdata),
+
     .timeout_o(timer_timeout)
 );
 ```
-**Why:**  
-This connects the SoC bus to the peripheral. The `timeout_o` output gives an immediate hardware observable event.
 
-### e) IO readback mux
+**Why placement matters**
+- `timer_rdata` must exist before IO mux
+- Clean peripheral grouping
+
+---
+
+### 4.6 IO Readback Mux (CRITICAL)
+
 ```verilog
-wire [31:0] IO_rdata =
+assign IO_rdata =
     timer_sel ? timer_rdata :
-    mem_wordaddr[IO_UART_CNTL_bit] ? {22'b0, !uart_ready, 9'b0} :
+    uart_sel  ? uart_rdata :
     32'b0;
+```
 
+```verilog
 assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
 ```
-**Why:**  
-When CPU performs a read in IO space, it expects the selected peripheral's data on `mem_rdata`. This mux ensures the correct peripheral contributes to the CPU read data bus.
 
-### f) LED toggling logic
+**Why**
+- Without this → CPU reads **zero forever**
+- Only one peripheral may drive `mem_rdata`
+
+---
+
+### 4.7 LED Toggle on Timeout (Hardware Proof)
+
 ```verilog
 reg timeout_d;
+
 always @(posedge clk) begin
     if (!resetn) begin
-        LEDS <= 5'b00000;
+        LEDS <= 5'b0;
         timeout_d <= 1'b0;
     end else begin
         timeout_d <= timer_timeout;
-        if (timer_timeout && !timeout_d) begin
+        if (timer_timeout && !timeout_d)
             LEDS[0] <= ~LEDS[0];
-        end
     end
 end
 ```
-**Why:**  
-Proves the timer is functioning by toggling an LED on a rising edge of `timeout_o`, without requiring CPU intervention.
+
+**Why**
+- Confirms timer expiry **without software**
+- Rising‑edge detection avoids double toggles
 
 ---
 
-## 5. Timer instantiation: exact placement advice
+## 5. Software Files
 
-**Where to put the instantiation in `soc.v`:**
-- After RAM instantiation and after other IO (like UART) is declared.
-- Before the IO read multiplexing logic and before `assign mem_rdata = ...`.
-- This ordering ensures `timer_rdata` is available when building `IO_rdata`.
+### 5.1 `link.ld` (Required)
 
-**Why this placement matters:**
-- If you put the timer instantiation after `mem_rdata` logic, you might accidentally use an uninitialized wire or create a compile-time error due to missing symbol.
-- Keeping all peripheral instantiations together makes debugging and verification much easier.
-
----
-
-## 6. IO readback mux and mem_rdata logic (why required)
-
-- The CPU will ignore `timer_rdata` unless `IO_rdata` places it onto `mem_rdata`.
-- If you forget to include `timer_sel ? timer_rdata : ...`, CPU reads to the timer's address will return garbage (often 0).
-- The `isRAM ? RAM_rdata : IO_rdata` final assignment ensures RAM accesses return RAM, while IO accesses return peripheral data.
-
----
-
-## 7. LED toggling logic (how it verifies timer)
-
-- Hardware-driven toggling of LED on `timeout_o` rising edge demonstrates timer expiry *without software*. This is the simplest hardware validation.
-- If LED toggles with the expected period after you program the FPGA and run the firmware that enables the timer, the timer is working.
-
----
-
-## 8. `timer_ip.v` quick summary (what it expects/exports)
-
-- Inputs:
-  - `clk`, `resetn`
-  - `sel`, `wr_en`, `rd_en`, `addr[1:0]`
-  - `wdata[31:0]`
-- Outputs:
-  - `rdata[31:0]` — registered readback
-  - `timeout_o` — hardware timeout output
-
-Registers inside:
-- `CTRL` (R/W): [0]=EN, [1]=MODE, [2]=PRESC_EN, [15:8]=PRESC_DIV
-- `LOAD` (R/W)
-- `VALUE` (R)
-- `STATUS` (R, W1C at bit 0)
-
-Behavior:
-- When EN=0, VALUE is preloaded with LOAD and timeout cleared.
-- When EN=1, counts down using prescaler if enabled. On expiry, sets STATUS[0] and either reloads (periodic) or zeroes (one-shot).
-
----
-
-## 9. `link.ld` (full file) and why it matters
-
-`link.ld`:
 ```ld
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
-MEMORY
-{
+MEMORY {
   RAM (rwx) : ORIGIN = 0x00000000, LENGTH = 6K
 }
 
-SECTIONS
-{
-  .text : {
-    *(.text*)
-    *(.rodata*)
-  } > RAM
-
-  .data : {
-    *(.data*)
-  } > RAM
-
-  .bss : {
-    *(.bss*)
-    *(COMMON)
-  } > RAM
+SECTIONS {
+  .text : { *(.text*) *(.rodata*) } > RAM
+  .data : { *(.data*) } > RAM
+  .bss  : { *(.bss*) *(COMMON) } > RAM
 }
 ```
 
-**Why:**  
-This tells the linker to place code and data starting at `0x00000000` (the RAM origin used by `Memory` module). Without a correct linker script the binary won't run because vector/entry addresses will be incorrect.
+**Why**
+- Matches RAM in `riscv.v`
+- Without this → code runs from wrong address
 
 ---
 
-## 10. `constraints.pcf` (PCF)
-
-Minimal PCF:
-```
-# Minimal test PCF for HX8K-CB132
-set_io LEDS[0] A5
-```
-
-**Why:**  
-Binds the top-level `LEDS[0]` signal to a physical FPGA pin (A5 here). Replace `A5` with the correct pin for your board.
-
----
-
-## 11. Example software (`main.c`) — full example
+### 5.2 Timer Test Program (`timer_test2.c`)
 
 ```c
-// main.c - Example firmware to set up timer and clear status
-#include <stdint.h>
+#define TIMER_BASE  0x00400040
+#define TIMER_CTRL  (*(volatile unsigned int*)(TIMER_BASE + 0x00))
+#define TIMER_LOAD  (*(volatile unsigned int*)(TIMER_BASE + 0x04))
+#define TIMER_STAT  (*(volatile unsigned int*)(TIMER_BASE + 0x0C))
 
-#define TIMER_BASE   0x00400040U
-#define TIMER_CTRL   (*(volatile uint32_t *)(TIMER_BASE + 0x00))
-#define TIMER_LOAD   (*(volatile uint32_t *)(TIMER_BASE + 0x04))
-#define TIMER_VALUE  (*(volatile uint32_t *)(TIMER_BASE + 0x08))
-#define TIMER_STAT   (*(volatile uint32_t *)(TIMER_BASE + 0x0C))
+void main() {
+    TIMER_LOAD = 12000000;
+    TIMER_CTRL = (1<<0) | (1<<1);   // enable + periodic
 
-void _start(void) {
-    // Load value for ~1 second (adjust for your clock rate)
-    // If your system clock is 12 MHz:
-    TIMER_LOAD = 12000000U;
-
-    // CTRL bits:
-    // [0] EN = 1
-    // [1] MODE = 1 (periodic)
-    // [2] PRESC_EN = 0 (disabled)
-    TIMER_CTRL = (1 << 0) | (1 << 1);
-
-    // main loop (we clear status in software as well)
     while (1) {
-        if (TIMER_STAT & 1U) {
-            // Clear W1C
-            TIMER_STAT = 1U;
-        }
+        if (TIMER_STAT & 1)
+            TIMER_STAT = 1;         // clear timeout
     }
 }
 ```
 
-**Notes:**
-- Adjust `TIMER_LOAD` if your clock freq differs.
-- `_start` is the entry symbol expected by `link.ld`. If your toolchain uses `main`, adapt accordingly and ensure the runtime is set up (this example avoids libc).
+---
+
+## 6. Creating and Editing Files using `gedit`
+
+`gedit` is a **graphical text editor** available on most Linux systems.  
+It is recommended for beginners because it avoids command‑mode complexity.
 
 ---
 
-## 12. Build, simulate, synthesize & program commands
+### 6.1 Create Required Files
 
-Below are example commands. Adjust tool names and paths to your environment.
-
-### A. Cross-compile firmware (RISC-V toolchain)
 ```bash
-# Assuming riscv32-unknown-elf toolchain in PATH
-riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -Os -nostdlib -T link.ld main.c -o firmware.elf
-riscv32-unknown-elf-objdump -D firmware.elf > firmware.dis
-riscv32-unknown-elf-objcopy -O binary firmware.elf firmware.bin
+touch riscv.v
+touch timer_ip.v
+touch start.S
+touch timer_test2.c
+touch link.ld
+touch VSDSquadronFM.pcf
 ```
 
-If you need a memory initialization file (`mem_init.hex`) for Verilog memory:
+---
+
+### 6.2 Open Files in `gedit`
+
 ```bash
-riscv32-unknown-elf-objcopy -O verilog firmware.elf firmware.mem
-# Or create a simple hex with:
-xxd -p -c 4 firmware.bin | awk '{print "32'h"$1","}' > firmware_init.vh
+gedit riscv.v
+gedit timer_ip.v
+gedit start.S
+gedit timer_test2.c
+gedit link.ld
+gedit VSDSquadronFM.pcf
 ```
 
-### B. Simulate with Icarus Verilog
+Open multiple files together:
+
 ```bash
-# example invocation - include all RTL and a testbench file 'tb_soc.v'
-iverilog -g2012 -o sim.vvp soc.v timer_ip.v memory.v processor.v clockworks.v corescore_emitter_uart.v tb_soc.v
+gedit riscv.v timer_ip.v link.ld timer_test2.c start.S VSDSquadronFM.pcf
+```
+
+---
+
+### 6.3 Save and Exit
+
+- Save: **Ctrl + S**
+- Close window: **Ctrl + Q**
+
+---
+
+### 6.4 Verify Files Exist
+
+```bash
+ls -l
+```
+
+---
+
+## 7. Simulation Commands (Copy‑Paste)
+
+### 7.1 Compile Firmware
+
+```bash
+riscv64-unknown-elf-gcc -Os   -march=rv32i -mabi=ilp32   -ffreestanding -nostdlib   start.S timer_test2.c   -Wl,-T,link.ld   -o firmware.elf
+```
+
+---
+
+### 7.2 Convert ELF to HEX
+
+```bash
+riscv64-unknown-elf-objcopy -O ihex firmware.elf firmware.hex
+```
+
+---
+
+### 7.3 RTL Simulation
+
+```bash
+iverilog -g2012 -DBENCH -o sim.vvp riscv.v timer_ip.v
+```
+
+```bash
 vvp sim.vvp
-# Use $dumpfile/$dumpvars in testbench to produce VCD for GTKWave
 ```
 
-### C. Synthesize, place & route for iCE40 (icestorm + nextpnr)
-Create a simple `build.sh` or run:
+---
+
+### 7.4 View Waveforms
 
 ```bash
-# 1. Synthesis with Yosys
-yosys -p "read_verilog *.v; synth_ice40 -top SOC -json build/soc.json"
-
-# 2. Place and route with nextpnr-ice40
-nextpnr-ice40 --hx8k --package cb132 --json build/soc.json --pcf constraints.pcf --asc build/soc.asc --pnr-threads 4
-
-# 3. Create bitstream
-icepack build/soc.asc build/soc.bin
-
-# 4. Program FPGA (requires iceprog)
-iceprog build/soc.bin
+gtkwave soc.vcd
 ```
-
-**Note:** Replace `--hx8k --package cb132` with your device and package (HX8K-CB132 used earlier).
-
-### D. Quick FPGA debug with GDB/qemu (optional)
-If you have a soft debug adapter, you can load ELF into RAM using a JTAG loader or memory init.
 
 ---
 
-## 13. Common errors and fixes
+## 8. FPGA Synthesis → P&R → Bitstream
 
-### Error: `Undefined symbol: timer_rdata` or similar compile error
-**Cause:** Timer instantiation or wire declaration missing or misspelled.
-**Fix:** Ensure `wire [31:0] timer_rdata;` and `wire timer_timeout;` are declared before instantiation, and module ports match names/types.
+### 8.1 Synthesis
 
-### Error: CPU reads zeros from timer registers
-**Cause:** IO read mux not returning `timer_rdata`.
-**Fix:** Confirm `IO_rdata` includes `timer_sel ? timer_rdata : ...` and `assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;`.
-
-### Symptom: LED never toggles
-**Cause possibilities:**
-- Timer never enabled in software (CTRL.EN == 0)
-- Wrong base address used in software
-- `timer_sel` decode mismatch (e.g., using byte address vs word address)
-**Fixes:**
-- Verify the base address in `main.c` is `0x00400040`
-- In simulation/prints, check `mem_wordaddr` and `mem_addr` values
-- Ensure software writes `TIMER_CTRL` with EN bit set
-
-### Symptom: VALUE stuck at LOAD
-**Cause:** EN=0 or prescaler issues
-**Fixes:**
-- Set CTRL.EN = 1 in software
-- Verify prescaler fields and presc_en are set as expected
-
-### Symptom: STATUS stays high
-**Cause:** STATUS is write-1-to-clear and never cleared in software/hardware
-**Fix:** Write `1` to the STATUS register (address +0x0C) to clear. For example: `TIMER_STAT = 1;`
-
-### Error: Synthesis fails complaining about unconnected pins or top-level ports
-**Cause:** Your top-level `SOC` ports don't match the expected top-level entity in your build scripts or constraints.
-**Fix:** Ensure the `SOC` module ports (`CLK`, `RESET`, `LEDS`, `RXD`, `TXD`) match the signals used in your constraints/board wrapper.
-
-### Error: `mem_rdata` conflicting driver (multiple drivers)
-**Cause:** Two sources driving `mem_rdata` (e.g., both RAM and IO).
-**Fix:** Use a single assignment that selects between RAM and IO (`assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;`) and ensure RAM isn't driving `mem_rdata` elsewhere as a reg.
-
----
-
-## 14. Appendix: Makefile & Yosys script snippets
-
-### Minimal `Makefile` targets
-```makefile
-VERILOG := soc.v timer_ip.v memory.v processor.v clockworks.v corescore_emitter_uart.v
-
-all: synth
-
-firmware:
-    riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -Os -nostdlib -T link.ld main.c -o firmware.elf
-    riscv32-unknown-elf-objcopy -O binary firmware.elf firmware.bin
-
-sim:
-    iverilog -g2012 -o sim.vvp $(VERILOG) tb_soc.v
-    vvp sim.vvp
-
-synth:
-    yosys -p "read_verilog $(VERILOG); synth_ice40 -top SOC -json build/soc.json"
-    nextpnr-ice40 --hx8k --package cb132 --json build/soc.json --pcf constraints.pcf --asc build/soc.asc
-    icepack build/soc.asc build/soc.bin
-
-program: synth
-    iceprog build/soc.bin
-```
-
-### Yosys one-liner (already shown above)
 ```bash
-yosys -p "read_verilog *.v; synth_ice40 -top SOC -json build/soc.json"
+yosys -p "
+read_verilog riscv.v timer_ip.v
+synth_ice40 -top SOC -json soc.json
+"
 ```
 
 ---
 
-## Final notes and recommended workflow (for beginners)
+### 8.2 Place & Route
 
-1. **Start with simulation.** Write a small TB that clocks the design and runs small memory writes from a simulated CPU (or emulate CPU writes) to test timer behavior. This avoids wasting FPGA cycles.
-2. **Build and run the firmware in simulation** (create a mem_init file to pre-load RAM with firmware).
-3. **Synthesize and program** only after simulation works.
-4. **Verify on FPGA** with the `LEDS[0]` toggling and optional UART prints.
-5. **Iterate**: if something fails, compare simulation waveforms and inspect the address lines to ensure the CPU is hitting the expected addresses.
+```bash
+nextpnr-ice40   --hx8k   --package cb132   --pcf VSDSquadronFM.pcf   --pcf-allow-unconstrained   --json soc.json   --asc soc.asc
+```
 
 ---
 
-## Download
-This file is saved as `integration_detailed.md`. Download it from the environment:
+### 8.3 Bitstream Generation
 
-**[Download the integration_detailed.md file](/mnt/data/integration_detailed.md)**
+```bash
+icepack soc.asc soc.bin
+```
 
 ---
 
-If you want, I can also:
-- Produce `integration_detailed.pdf`
-- Create a simulation testbench for Icarus Verilog that drives writes to the timer registers and shows VALUE decrement in the waveform
-- Provide a step-by-step screencast script you can record
+### 8.4 Program FPGA
 
-Happy to help further — tell me which of the follow-ups you'd like! 😊
+```bash
+iceprog soc.bin
+```
+
+---
+
+## 8.5. Clean Build Artifacts
+
+```bash
+rm -f sim.vvp soc.vcd soc.json soc.asc soc.bin firmware.elf firmware.hex
+```
+
+## 9. Expected Results
+
+| Observation | Meaning |
+|----|----|
+| LED0 toggles | Timer expiry works |
+| VALUE decreases | Timer counting |
+| STATUS[0] pulses | Correct timeout |
+| No CPU hang | IO decode correct |
+
+---
+
+## 10. Common Errors & Fixes
+
+### ❌ Timer reads always zero
+✔ Missing IO read mux  
+✔ `timer_sel` incorrect  
+
+---
+
+### ❌ LED never toggles
+✔ CTRL.EN not set  
+✔ Wrong base address  
+✔ Clock/reset issue  
+
+---
+
+### ❌ STATUS stuck high
+✔ STATUS is W1C → write `1` to clear  
+
+---
+
+## 11. Final Understanding (Key Takeaway)
+
+You now understand:
+
+- How CPU ↔ peripheral communication works
+- Why **address decode is everything**
+- Why readback muxes are mandatory
+- How to validate hardware without software
+- How firmware, linker, and RTL must align
+
+This is **real SoC‑level design**, not a toy example.
+
+---
+
+
