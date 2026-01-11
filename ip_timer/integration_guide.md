@@ -123,17 +123,6 @@ TIMER_BASE = 0x00400040
 
 ---
 
-## Register Offset Interface
-
-| Register | Offset | Address |
-|--------|--------|---------|
-| CTRL   | 0x00 | TIMER_BASE + 0x00 |
-| LOAD   | 0x04 | TIMER_BASE + 0x04 |
-| VALUE  | 0x08 | TIMER_BASE + 0x08 |
-| STATUS | 0x0C | TIMER_BASE + 0x0C |
-
----
-
 ## IO Read Data Mux Update
 
 ```verilog
