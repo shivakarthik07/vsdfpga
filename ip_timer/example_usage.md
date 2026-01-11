@@ -139,8 +139,8 @@ The timer has expired exactly once, which confirms correct one‑shot behavior.
 * `timeout` remains **high** until software clears it
 * No automatic reload occurs
 
-**What this means**
-The timer correctly stops after expiration and waits for software action.
+## key confirmation
+- The timer correctly stops after expiration and waits for software action.
 
 ---
 
@@ -190,8 +190,8 @@ int main(void)
 **TIMEOUT_TOGGLE**
 <img width="1057" height="194" alt="timeout_toggling" src="https://github.com/user-attachments/assets/9e63e4b8-f3d5-4f56-8832-c5a6f56d7581" />
 
-**Key confirmation**
-The timer reloads automatically after every timeout.
+## Key confirmation
+- The timer reloads automatically after every timeout.
 
 ---
 
@@ -249,8 +249,15 @@ int main(void)
 2. Software writes `1` to `STATUS`
 3. `STATUS` returns to `0`
 
-**Key confirmation**
-Write‑1‑to‑Clear semantics work correctly.
+**TIMER_LOADED**
+<img width="1162" height="183" alt="timer_clear_png" src="https://github.com/user-attachments/assets/76d8a85d-ffe3-47fb-9c45-dcd4c1304fc8" />
+**TIMER_DECREMENT & TIMEOUT_HIGH**
+<img width="1612" height="198" alt="timer_cleaar_decrementing" src="https://github.com/user-attachments/assets/067047e9-a845-4ad1-a56c-c9075d1f5467" />
+**TIMEOUT_RESET**
+<img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
+
+## Key confirmation
+- Write‑1‑to‑Clear semantics work correctly.
 
 ---
 
