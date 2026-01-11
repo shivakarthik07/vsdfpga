@@ -142,8 +142,6 @@ assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
 | Signal | Direction | Description |
 |------|----------|-------------|
 | timeout_o | output | Timer expiration pulse |
-| clk | input | System clock |
-| resetn | input | Active-low reset |
 
 ---
 
