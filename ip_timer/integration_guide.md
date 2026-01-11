@@ -89,7 +89,7 @@ Timer occupies **4 words**:
 
 ---
 
-### 4.1 Wire Declarations (WHY: connect timer to SoC bus)
+### 4.1 Wire Declarations 
 
 ```verilog
 wire        timer_sel;
@@ -114,7 +114,7 @@ wire        timer_timeout;
 
 ---
 
-### 4.2 Address Decode Logic (MOST IMPORTANT)
+### 4.2 Address Decode Logic 
 
 ```verilog
 localparam TIMER_BASE_WADDR = 30'h00100010;
@@ -160,7 +160,7 @@ assign timer_addr = mem_wordaddr[1:0];
 
 ---
 
-### 4.5 Timer Instantiation (Where to Place)
+### 4.5 Timer Instantiation 
 
 > Place **after IO decode**, **before mem_rdata mux**
 
@@ -186,7 +186,7 @@ timer_ip TIMER (
 
 ---
 
-### 4.6 IO Readback Mux (CRITICAL)
+### 4.6 IO Readback Mux 
 
 ```verilog
 assign IO_rdata =
@@ -205,7 +205,7 @@ assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
 
 ---
 
-### 4.7 LED Toggle on Timeout (Hardware Proof)
+### 4.7 LED Toggle on Timeout 
 
 ```verilog
 reg timeout_d;
@@ -230,7 +230,7 @@ end
 
 ## 5. Software Files
 
-### 5.1 `link.ld` (Required)
+### 5.1 `link.ld` 
 
 ```ld
 OUTPUT_ARCH(riscv)
@@ -253,7 +253,7 @@ SECTIONS {
 
 ---
 
-### 5.2 Timer Test Program (`timer_test2.c`)
+### 5.2 Timer Test Program 
 
 ```c
 #define TIMER_BASE  0x00400040
