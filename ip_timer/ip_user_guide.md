@@ -158,6 +158,138 @@ While the Timer IP is intentionally general-purpose, certain limitations should 
 ## BLOCK DIAGRAM
 <img width="1236" height="2928" alt="image" src="https://github.com/user-attachments/assets/f020b3f0-2f65-457e-a70f-339234eda4cc" />
 
+## Software Programming Model — Timer IP
+
+This section describes how software interacts with the Timer IP at a **bare‑metal / low‑level driver** level, following conventions used in commercial SoC peripherals.
+
+---
+
+##  Software Control Model
+
+The Timer IP is controlled entirely through **memory‑mapped registers**.  
+Software interacts with the IP using standard load/store instructions to the timer base address.
+
+The software-visible control mechanisms are:
+- **CTRL register** – enables/disables the timer and selects operating mode
+- **LOAD register** – programs the initial countdown value
+- **STATUS register** – reports timeout completion and supports W1C clearing
+- **VALUE register** – provides visibility into the current countdown value
+
+The timer operates autonomously once enabled; no continuous software intervention is required.
+
+---
+
+##  Typical Initialization Sequence
+
+A recommended initialization sequence ensures deterministic behavior and avoids spurious timeouts.
+
+### Recommended Sequence
+
+- **Disable the timer**
+   - Clear `CTRL[0]` (EN = 0)
+   - Ensures the timer is not running during configuration
+
+- **Clear pending timeout**
+   - Write `1` to `STATUS[0]` (Write‑1‑to‑Clear)
+   - Prevents stale timeout flags from previous runs
+
+- **Program LOAD value**
+   - Write the desired initial count to `LOAD`
+   - This value is latched into the counter when the timer starts
+
+- **Configure CTRL register**
+   - Set:
+     - `CTRL[1]` → Mode (one‑shot / periodic)
+     - `CTRL[2]` → Prescaler enable (if required)
+     - `CTRL[15:8]` → Prescaler divider (if enabled)
+
+- **Enable the timer**
+   - Set `CTRL[0]` (EN = 1)
+   - Timer begins counting on the next clock edge
+
+---
+
+##  Polling vs Status Checking
+
+The Timer IP is designed primarily for **polling-based software control**, making it suitable for:
+- Bare‑metal firmware
+- Simple RTOS environments
+- Deterministic test firmware
+
+### Polling Model
+
+Software repeatedly reads the `STATUS` register until timeout is observed.
+
+```c
+while ((TIMER_STATUS & 0x1) == 0) {
+    // wait for timeout
+}
+```
+
+### Timeout Detection
+
+- `STATUS[0] = 1` indicates the timer has expired
+- The flag remains **asserted (level-sensitive)** until explicitly cleared by software
+
+---
+
+## Clearing Timeout (W1C Semantics)
+
+The timeout flag uses **Write‑1‑to‑Clear (W1C)** behavior.
+
+### Clearing Procedure
+
+```c
+TIMER_STATUS = 0x1;  // clears STATUS[0]
+```
+
+Important notes:
+- Writing `0` has no effect
+- Writing `1` clears the timeout flag
+- Other bits are reserved and must be written as `0`
+
+---
+
+##  One‑Shot vs Periodic Software Behavior
+
+### One‑Shot Mode (`CTRL[1] = 0`)
+- Timer counts down once
+- On expiry:
+  - `STATUS[0]` is asserted
+  - `VALUE` transitions to `0`
+- Software must:
+  - Clear `STATUS`
+  - Reload and re‑enable timer if reuse is required
+
+### Periodic Mode (`CTRL[1] = 1`)
+- Timer automatically reloads `LOAD` on expiry
+- `STATUS[0]` asserts on every period
+- Software typically:
+  - Polls `STATUS`
+  - Clears flag after each period
+  - Leaves timer continuously enabled
+
+---
+
+##  Recommended Software Practices
+
+- Always clear `STATUS` before enabling the timer
+- Avoid reading `VALUE` for control decisions (use `STATUS` instead)
+- Do not modify `LOAD` while the timer is running
+- Disable the timer before reprogramming configuration fields
+
+---
+
+##  Intended Software Usage Level
+
+This programming model is suitable for:
+- Firmware bring‑up
+- Hardware validation
+- Deterministic timing loops
+- Educational and research SoCs
+
+The design intentionally avoids complex interrupt or DMA coupling to maintain clarity and portability.
+
 ## Summary
 
 The Timer IP provides a compact, deterministic, and configurable hardware timing block suitable for a wide range of embedded and SoC applications.  
