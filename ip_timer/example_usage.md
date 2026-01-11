@@ -100,6 +100,9 @@ When viewing the waveform for **one‑shot mode**, the following behavior should
 **What this means**
 The timer correctly captures the software‑written LOAD value before counting starts.
 
+**TIMER_LOAD**
+<img width="1598" height="375" alt="loadtimer" src="https://github.com/user-attachments/assets/78d8df5d-2b0a-4125-9f55-293c46e6f164" />
+
 ---
 
 ### 2. Countdown Phase
@@ -111,6 +114,9 @@ The timer correctly captures the software‑written LOAD value before counting s
 **What this means**
 The timer core is decrementing correctly and is synchronized with the system clock.
 
+**TIMER_DECREMENT**
+<img width="1598" height="375" alt="timerfunctioning" src="https://github.com/user-attachments/assets/1214b75b-402c-43f3-98ae-88e49b1c123d" />
+
 ---
 
 ### 3. Timeout Event
@@ -121,6 +127,9 @@ The timer core is decrementing correctly and is synchronized with the system clo
 
 **What this means**
 The timer has expired exactly once, which confirms correct one‑shot behavior.
+
+**TIMEOUT_HIGH**
+<img width="1317" height="114" alt="timeout_high_timer" src="https://github.com/user-attachments/assets/73b3097b-f7af-4423-b149-ebfbe626e3a7" />
 
 ---
 
