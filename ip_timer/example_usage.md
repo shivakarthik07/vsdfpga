@@ -139,7 +139,7 @@ The timer correctly stops after expiration and waits for software action.
 
 ### code used
 <details>
-<summary> one shot test (click to expand)</summary>
+<summary> periodic test (click to expand)</summary>
 
 ```c
 
@@ -180,7 +180,7 @@ The timer reloads automatically after every timeout.
 
 ### code used
 <details>
-<summary> one shot test (click to expand)</summary>
+<summary> timer clear test (click to expand)</summary>
 
 ```c
 
@@ -239,7 +239,7 @@ Write‑1‑to‑Clear semantics work correctly.
 
 ### code used
 <details>
-<summary> one shot test (click to expand)</summary>
+<summary> hardware test (click to expand)</summary>
 
 ```c
 
