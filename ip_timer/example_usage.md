@@ -142,6 +142,25 @@ The timer correctly stops after expiration and waits for software action.
 <summary> one shot test (click to expand)</summary>
 
 ```c
+
+#include "io.h"
+#define TIMER_BASE 0x00400040
+#define TIMER_CTRL (*(volatile unsigned int *)(TIMER_BASE + 0x00))
+#define TIMER_LOAD (*(volatile unsigned int *)(TIMER_BASE + 0x04))
+#define TIMER_STAT (*(volatile unsigned int *)(TIMER_BASE + 0x0C))
+
+int main(void)
+{
+    TIMER_LOAD = 20;
+    TIMER_CTRL = (1 << 0) | (1 << 1); // EN=1, MODE=1
+
+    while (1) {
+        while ((TIMER_STAT & 1) == 0);
+        print_string("Periodic timeout\n");
+        TIMER_STAT = 1;
+    }
+}
+
 ```
 </details>
 
@@ -159,6 +178,13 @@ The timer reloads automatically after every timeout.
 
 ## Example 3 – Timeout Clear Test (`timer_clear_test.c`)
 
+### code used
+<details>
+<summary> one shot test (click to expand)</summary>
+
+```c
+```
+</details>
 ### What the User Should Observe
 
 1. Timer expires → `STATUS = 1`
@@ -171,6 +197,14 @@ Write‑1‑to‑Clear semantics work correctly.
 ---
 
 ## Example 4 – FPGA Hardware Test (`timer_test2.c`)
+
+### code used
+<details>
+<summary> one shot test (click to expand)</summary>
+
+```c
+```
+</details>
 
 ### What the User Should Observe on Board
 
