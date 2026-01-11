@@ -61,4 +61,19 @@ The Timer IP supports multiple operating modes to accommodate a wide range of ti
 - Both one-shot and periodic modes may optionally operate with a programmable prescaler:
 
 ---
+##  Limitations
+
+While the Timer IP is intentionally general-purpose, certain limitations should be considered during system design.
+
+### Single Timer Instance
+
+### No Interrupt Controller Integration
+
+### No Capture or Compare
+
+### Software-Driven Control
+
+---
+## BLOCK DIAGRAM
+<img width="1236" height="2928" alt="image" src="https://github.com/user-attachments/assets/f020b3f0-2f65-457e-a70f-339234eda4cc" />
 
