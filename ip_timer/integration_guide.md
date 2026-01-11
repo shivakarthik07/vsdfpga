@@ -154,8 +154,7 @@ assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
 | Timer IP Signal | SoC Signal | FPGA Pin | Board Connection | Purpose |
 |---------------|-----------|---------|-----------------|---------|
 | timeout_o | LEDS[0] | A5 | On-board LED0 | Visual timeout indication |
-| clk | CLK | — | System clock | Timer clock |
-| resetn | RESET | — | Reset button | Reset timer |
+
 
 ---
 
