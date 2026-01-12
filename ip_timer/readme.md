@@ -371,6 +371,8 @@ set_io LEDS[0] 39
 <img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
 
 ### VIDEO
+[![FPGA Timer IP Hardware Demo](<img width="596" height="896" alt="image" src="https://github.com/user-attachments/assets/e87b198d-5599-4e09-b13a-3ca35b56fcee" />
+)](https://drive.google.com/file/d/11lz5z7mXsEkiH0CkYDyY9zl6xBnHlTqJ/view?usp=sharing)
 
 ### RELOAD MODE
 
