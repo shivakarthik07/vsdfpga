@@ -252,7 +252,7 @@ assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
 
 | Timer IP Signal | SoC Signal | FPGA Pin | Board Connection | Purpose |
 |---------------|-----------|---------|-----------------|---------|
-| timeout_o | LEDS[0] | A5 | On-board LED0 | Visual timeout indication |
+| timeout_o | LEDS[0] | 39 | On-board LED0 | Visual timeout indication |
 
 
 ---
@@ -260,7 +260,7 @@ assign mem_rdata = isRAM ? RAM_rdata : IO_rdata;
 ### Example Constraint File Entry
 
 ```pcf
-set_io LEDS[0] A5
+set_io LEDS[0] 39
 ```
 
 ---
