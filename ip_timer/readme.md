@@ -288,11 +288,11 @@ assign timer_sel =
 
 **create a firmware for test**
 
-- [one shot](ip_timer/Firmware/timer_test.c)
+- [one shot](Firmware/timer_test.c)
 
-- [periodic test](ip_timer/Firmware/timer_periodic_test.c)
+- [periodic test](Firmware/timer_periodic_test.c)
 
-- [clear test](ip_timer/Firmware/timer_clear_test.c)
+- [clear test](Firmware/timer_clear_test.c)
 ---
 
 ###  Use this commands 
