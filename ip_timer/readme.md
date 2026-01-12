@@ -371,6 +371,8 @@ set_io LEDS[0] 39
 <img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
 
 ### VIDEO
+- Hardware validation of the Timer IP showing correct timeout behavior.
+- The timer counts down to zero, asserts the timeout signal, and drives the on-board LED high, confirming proper timer operation and SoC-level integration.
 https://github.com/user-attachments/assets/ba42723f-88fe-45ac-ae99-935e401c3520
 
 
