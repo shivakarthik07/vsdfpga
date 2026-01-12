@@ -364,5 +364,16 @@ sudo iceprog soc.bin
 set_io LEDS[0] 39
 ```
 ## Demo
+
+### ONESHOT MODE
+
+
+
+### RELOAD MODE
+
+
+
+### TIMEOUT CLEAR MODE
+
 <img width="1075" height="444" alt="hardware proof" src="https://github.com/user-attachments/assets/d27ac662-9fac-4fee-87e6-12e5efb0a267" />
 
