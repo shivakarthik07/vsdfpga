@@ -163,14 +163,15 @@ While the Timer IP is intentionally general-purpose, certain limitations should 
 This section describes how software interacts with the Timer IP at a **bare‑metal / low‑level driver** level, following conventions used in commercial SoC peripherals.
 
 ---
+## HARDWARE USAGE
+
+<img width="691" height="372" alt="hardware_usage" src="https://github.com/user-attachments/assets/55a637bb-39e1-4466-81ea-d600270f34ef" />
 
 ##  Software Control Model
 
-The Timer IP is controlled entirely through **memory‑mapped registers**.  
-Software interacts with the IP using standard load/store instructions to the timer base address.
-
 The software-visible control mechanisms are:
-- **CTRL register** – enables/disables the timer and selects operating mode
+- **CTRL register** – enables/disables the timer and selects operating mode<
+
 - **LOAD register** – programs the initial countdown value
 - **STATUS register** – reports timeout completion and supports W1C clearing
 - **VALUE register** – provides visibility into the current countdown value
