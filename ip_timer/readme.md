@@ -318,11 +318,7 @@ vvp sim.vvp
 ```bash
 gtkwave soc.vcd
 ```
-###  Simulation with Yosys 
 
-```bash
-make synthesis
-```
 ### FPGA Synthesis & Bitstream 
 
 ```bash
