@@ -367,13 +367,36 @@ set_io LEDS[0] 39
 
 ### ONESHOT MODE
 
+**TIMER_LOADED**
+<img width="1162" height="183" alt="timer_clear_png" src="https://github.com/user-attachments/assets/76d8a85d-ffe3-47fb-9c45-dcd4c1304fc8" />
+**TIMER_DECREMENT & TIMEOUT_HIGH**
+<img width="1612" height="198" alt="timer_cleaar_decrementing" src="https://github.com/user-attachments/assets/067047e9-a845-4ad1-a56c-c9075d1f5467" />
+**TIMEOUT_RESET**
+<img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
 
 
 ### RELOAD MODE
 
+**TIMER LOADED**
+<img width="1597" height="191" alt="reload_timer_load" src="https://github.com/user-attachments/assets/f0952aa7-10a9-43aa-8009-a6a3cb5d3d14" />
+**TIMER DECREMENT**
+<img width="1597" height="191" alt="reload_timer_decrement" src="https://github.com/user-attachments/assets/14fa6f59-6fdd-480b-9702-0167ef03f908" />
+**TIMER RELOADED**
+<img width="1597" height="191" alt="reload_timer_reloaded" src="https://github.com/user-attachments/assets/ddca9c74-dece-4955-b13b-c2c0a487be0f" />
+**TIMER READBACK**
+<img width="1609" height="217" alt="reload_timer_readback" src="https://github.com/user-attachments/assets/35c47bf4-3b13-4bd1-b818-73b136d13d0d" />
+**TIMEOUT_TOGGLE**
+<img width="1057" height="194" alt="timeout_toggling" src="https://github.com/user-attachments/assets/9e63e4b8-f3d5-4f56-8832-c5a6f56d7581" />
 
 
 ### TIMEOUT CLEAR MODE
 
+**TIMER_LOADED**
+<img width="1162" height="183" alt="timer_clear_png" src="https://github.com/user-attachments/assets/76d8a85d-ffe3-47fb-9c45-dcd4c1304fc8" />
+**TIMER_DECREMENT & TIMEOUT_HIGH**
+<img width="1612" height="198" alt="timer_cleaar_decrementing" src="https://github.com/user-attachments/assets/067047e9-a845-4ad1-a56c-c9075d1f5467" />
+**TIMEOUT_RESET**
+<img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
+**LEDS**
 <img width="1075" height="444" alt="hardware proof" src="https://github.com/user-attachments/assets/d27ac662-9fac-4fee-87e6-12e5efb0a267" />
 
