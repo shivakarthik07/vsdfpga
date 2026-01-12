@@ -34,15 +34,15 @@
 
 ##  Why the Timer Is Used 
 
--   Hardware timers provide predictable timing unaffected by software variability.
+-   **Hardware timers provide predictable timing unaffected by software variability.**
 
--   Prevents deadlocks and uncontrolled execution paths in failure scenarios.
+-   **Prevents deadlocks and uncontrolled execution paths in failure scenarios.**
 
--   Eliminates fragile software delay loops and ad-hoc timing constructs.
+-   **Eliminates fragile software delay loops and ad-hoc timing constructs.**
 
--   Enables sleep-based designs instead of continuous polling.
+-   **Enables sleep-based designs instead of continuous polling.**
 
--   Provides a reusable, standardized timing primitive across multiple designs and products.
+-   **Provides a reusable, standardized timing primitive across multiple designs and products.**
 
 ---
 ## FEATURE SUMMARY
