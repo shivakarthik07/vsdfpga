@@ -298,10 +298,8 @@ assign timer_sel =
 
 ### Firmware Build (ELF + HEX)
 ```bash
-riscv64-unknown-elf-gcc -Os   -march=rv32i -mabi=ilp32   -ffreestanding -nostdlib   start.S timer_test2.c   -Wl,-T,link.ld   -o firmware.elf
-```
-```bash
-riscv64-unknown-elf-objcopy -O ihex firmware.elf firmware.hex
+cd Firmware
+make timer_clear_test.bram.hex
 ```
 ### Simulation with Icarus Verilog (BENCH mode)
 
@@ -323,11 +321,7 @@ gtkwave soc.vcd
 ###  Simulation with Yosys 
 
 ```bash
-yosys -p "
-read_verilog riscv.v timer_ip.v
-prep -top SOC
-stat
-"
+make synthesis
 ```
 ### FPGA Synthesis & Bitstream 
 
@@ -339,7 +333,7 @@ synth_ice40 -top SOC -json soc.json
 ```
 
 ```bash
-nextpnr-ice40   --hx8k   --package cb132   --pcf VSDSquadronFM.pcf   --pcf-allow-unconstrained   --json soc.json   --asc soc.asc
+make pnr
 ```
 
 ```bash
@@ -349,14 +343,17 @@ icepack soc.asc soc.bin
 ### Program FPGA
 
 ```bash
-iceprog soc.bin
+sudo iceprog soc.bin
 ```
+### HARDWARE USAGE 
+<img width="691" height="372" alt="hardware_usage" src="https://github.com/user-attachments/assets/bd3be6fc-9634-49f0-9f5c-de0b7ffa3ab8" />
+
 
 ### Board-Level Signal Mapping
 
 | Timer IP Signal | SoC Signal | FPGA Pin | Board Connection | Purpose |
 |---------------|-----------|---------|-----------------|---------|
-| timeout_o | LEDS[0] | A5 | On-board LED0 | Visual timeout indication |
+| timeout_o | LEDS[0] | 39 | On-board LED0 | Visual timeout indication |
 
 
 ---
@@ -364,6 +361,8 @@ iceprog soc.bin
 ### pins
 
 ```pcf
-set_io LEDS[0] A5
+set_io LEDS[0] 39
 ```
+## Demo
+<img width="1075" height="444" alt="hardware proof" src="https://github.com/user-attachments/assets/d27ac662-9fac-4fee-87e6-12e5efb0a267" />
 
