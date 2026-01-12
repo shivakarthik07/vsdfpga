@@ -370,6 +370,7 @@ set_io LEDS[0] 39
 **TIMEOUT_RESET**
 <img width="1612" height="198" alt="timeout_reset" src="https://github.com/user-attachments/assets/2de73b79-b9fa-487b-a403-18459c2394cc" />
 
+### VIDEO
 
 ### RELOAD MODE
 
