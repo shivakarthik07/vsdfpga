@@ -290,9 +290,9 @@ assign timer_sel =
 
 - [one shot](ip_timer/Firmware/timer_test.c)
 
-- ****
+- [periodic test](ip_timer/Firmware/timer_periodic_test.c)
 
-- ****
+- 
 ---
 
 ###  Use this commands 
