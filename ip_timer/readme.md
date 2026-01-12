@@ -373,6 +373,7 @@ set_io LEDS[0] 39
 ### VIDEO
 - Hardware validation of the Timer IP showing correct timeout behavior.
 - The timer counts down to zero, asserts the timeout signal, and drives the on-board LED high, confirming proper timer operation and SoC-level integration.
+
 https://github.com/user-attachments/assets/ba42723f-88fe-45ac-ae99-935e401c3520
 
 
