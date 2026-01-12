@@ -73,7 +73,7 @@ The Timer IP supports multiple operating modes to accommodate a wide range of ti
 
 ---
 ## BLOCK DIAGRAM
-<img width="1236" height="2928" alt="image" src="https://github.com/user-attachments/assets/f020b3f0-2f65-457e-a70f-339234eda4cc" />
+<img width="634" height="728" alt="image" src="https://github.com/user-attachments/assets/f020b3f0-2f65-457e-a70f-339234eda4cc" />
 
 ##  RTL 
 
