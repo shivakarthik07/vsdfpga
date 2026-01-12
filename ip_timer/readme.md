@@ -286,7 +286,7 @@ assign timer_sel =
 
 ## HOW TO USE THE IP
 
-- create a firmware for test
+**create a firmware for test**
 
 ---
 
