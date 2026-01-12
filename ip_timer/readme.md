@@ -292,7 +292,7 @@ assign timer_sel =
 
 - [periodic test](ip_timer/Firmware/timer_periodic_test.c)
 
-- 
+- [clear test](ip_timer/Firmware/timer_clear_test.c)
 ---
 
 ###  Use this commands 
